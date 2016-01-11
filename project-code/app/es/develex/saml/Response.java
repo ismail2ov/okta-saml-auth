@@ -34,7 +34,8 @@ public class Response {
      * loadXmlFromBase64(response);
      * setDestinationUrl(currentUrl)
      *
-     * @param certificateManager Object with idp information
+     * @param certificateManager
+     * @throws CertificateException
      */
     public Response(CertificateManager certificateManager) throws CertificateException {
         error = new StringBuffer();
@@ -44,9 +45,10 @@ public class Response {
     /**
      * Constructor to have a Response object full builded and ready to validate the saml response
      *
-     * @param certificateManager Object with idp information
-     * @param response           SAML Response on string format
-     * @param currentURL         URL of the current host + current view
+     * @param certificateManager
+     * @param response
+     * @param currentURL
+     * @throws Exception
      */
 
     public Response(CertificateManager certificateManager, String response, String currentURL) throws Exception {
@@ -55,6 +57,11 @@ public class Response {
         this.currentUrl = currentURL;
     }
 
+    /**
+     *
+     * @param responseStr The response in string format
+     * @throws Exception Error processing XML
+     */
     public void loadXmlFromBase64(String responseStr) throws Exception {
         Base64 base64 = new Base64();
         byte[] decodedB = base64.decode(responseStr);
@@ -214,6 +221,11 @@ public class Response {
         }
     }
 
+    /**
+     *
+     * @return NameID
+     * @throws Exception Has not found NameID
+     */
     public String getNameId() throws Exception {
         NodeList nodes = document.getElementsByTagNameNS("urn:oasis:names:tc:SAML:2.0:assertion", "NameID");
         if (nodes.getLength() == 0) {
@@ -225,8 +237,7 @@ public class Response {
     /**
      * Checks if the Status is success
      *
-     * @throws Exception
-     * @throws $statusExceptionMsg If status is not success
+     * @throws Exception $statusExceptionMsg If status is not success
      */
     private Map<String, String> checkStatus() throws Exception {
         Map<String, String> status = Utils.getStatus(document);

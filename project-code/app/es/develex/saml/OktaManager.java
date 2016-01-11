@@ -52,7 +52,14 @@ public class OktaManager extends Controller {
     public Result logout() {
         session().clear();
 
-        return redirect("/");
+        String redirect = Play.application().configuration().getString("okta.page.after.logout");
+
+        if (redirect != null) {
+            return redirect(redirect);
+        } else {
+            return redirect("/");
+        }
+
     }
 
     public String absoluteURL() {
