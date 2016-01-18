@@ -16,41 +16,46 @@ public class OktaAuthAction extends Action<OktaAuth> {
 
     public F.Promise<Result> call(Http.Context ctx) throws Throwable {
 
+        String oktaEnabled = Play.application().configuration().getString("okta.auth.enabled");
+
+        if ((oktaEnabled == null) || (!oktaEnabled.equals("true"))) {
+            return delegate.call(ctx);
+        }
+
         String user = session("user");
         if (session("user") != null) {
 
             return delegate.call(ctx);
-
-        } else {
-            Http.Request request = Controller.request();
-            flash("requiredUrl", request.uri());
-
-            play.Configuration config = Play.application().configuration();
-
-            String consumerServiceUrl = config.getString("okta.consumer.service.url");
-            String identitySsoUrl = config.getString("okta.identity.sso.url");
-            String identityIssuer = config.getString("okta.identity.issuer");
-
-            Configuration configuration = new Configuration();
-            configuration.setConsumerServiceUrl(consumerServiceUrl);
-            configuration.setIssuer(identityIssuer);
-            configuration.setIdentitySsoUrl(identitySsoUrl);
-
-            AuthRequest authReq = new AuthRequest(configuration);
-
-            Map<String, String[]> params = request.queryString();
-            String relayState = null;
-            for (String parameter : params.keySet()) {
-                if (parameter.equalsIgnoreCase("relaystate")) {
-                    String[] values = params.get(parameter);
-                    relayState = values[0];
-                }
-            }
-
-            String reqString = authReq.getSSOurl(relayState);
-
-            return F.Promise.pure(redirect(reqString));
         }
+
+        Http.Request request = Controller.request();
+        flash("requiredUrl", request.uri());
+
+        play.Configuration config = Play.application().configuration();
+
+        String consumerServiceUrl = config.getString("okta.consumer.service.url");
+        String identitySsoUrl = config.getString("okta.identity.sso.url");
+        String identityIssuer = config.getString("okta.identity.issuer");
+
+        Configuration configuration = new Configuration();
+        configuration.setConsumerServiceUrl(consumerServiceUrl);
+        configuration.setIssuer(identityIssuer);
+        configuration.setIdentitySsoUrl(identitySsoUrl);
+
+        AuthRequest authReq = new AuthRequest(configuration);
+
+        Map<String, String[]> params = request.queryString();
+        String relayState = null;
+        for (String parameter : params.keySet()) {
+            if (parameter.equalsIgnoreCase("relaystate")) {
+                String[] values = params.get(parameter);
+                relayState = values[0];
+            }
+        }
+
+        String reqString = authReq.getSSOurl(relayState);
+
+        return F.Promise.pure(redirect(reqString));
 
     }
 }
